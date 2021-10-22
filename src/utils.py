@@ -17,7 +17,9 @@ def create_lag_features(df:pd.DataFrame, columns, lags_start: int, lags_end: int
 
 def create_windows_features(df:pd.DataFrame, columns, windows: list):
     for col in columns:
+        print(col)
         for window in windows:
+            print('window', window)
             new_columns = [f'{col}_window_{window}_mean', f'{col}_window_{window}_trend', 
             f'{col}_window_{window}_sum', f'{col}_window_{window}_min', f'{col}_window_{window}_max']
             df[new_columns] = (df.groupby('breath_id')[col].rolling(window=window,min_periods=windows[0])
@@ -25,9 +27,10 @@ def create_windows_features(df:pd.DataFrame, columns, windows: list):
                                                                     f'{col}_window_{window}_trend':trendline,
                                                                     f'{col}_window_{window}_sum':"sum",
                                                                     f'{col}_window_{window}_min':"min",
-                                                                    f'{col}_window_{window}_max':"max",
-                                                                    f'{col}_window_{window}_cumsum': "cumsum"})
+                                                                    f'{col}_window_{window}_max':"max"})
                                                                .reset_index(level=0,drop=True))
+            print('finished')
+            print('*' * 50)
 
 
 
