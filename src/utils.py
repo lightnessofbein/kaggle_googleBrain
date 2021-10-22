@@ -20,11 +20,10 @@ def create_windows_features(df:pd.DataFrame, columns, windows: list):
         print(col)
         for window in windows:
             print('window', window)
-            new_columns = [f'{col}_window_{window}_mean', f'{col}_window_{window}_trend', 
+            new_columns = [f'{col}_window_{window}_mean',
             f'{col}_window_{window}_sum', f'{col}_window_{window}_min', f'{col}_window_{window}_max']
             df[new_columns] = (df.groupby('breath_id')[col].rolling(window=window,min_periods=windows[0])
                                                               .agg({f'{col}_window_{window}_mean':"mean",
-                                                                    f'{col}_window_{window}_trend':trendline,
                                                                     f'{col}_window_{window}_sum':"sum",
                                                                     f'{col}_window_{window}_min':"min",
                                                                     f'{col}_window_{window}_max':"max"})
@@ -34,7 +33,7 @@ def create_windows_features(df:pd.DataFrame, columns, windows: list):
 
 
 
-def add_features(df):
+def add_features(df, windows):
     df['cross']= df['u_in'] * df['u_out']
     df['cross2']= df['time_step'] * df['u_out']
     df['area'] = df['time_step'] * df['u_in']
@@ -81,7 +80,7 @@ def add_features(df):
                            .ewm(halflife=9)\
                            .mean()\
                            .reset_index(level=0,drop=True))
-    create_windows_features(df, ['u_in', 'u_out'], [5, 10, 20, 40])
+    create_windows_features(df, ['u_in', 'u_out'], windows)
     print("Step-6...Completed")
     
     df['u_in_lagback_diff1'] = df['u_in'] - df['u_in_lag-1']
