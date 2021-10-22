@@ -15,7 +15,7 @@ def create_lag_features(df:pd.DataFrame, columns, lags_start: int, lags_end: int
             df[lag_feature_name] = df.groupby('breath_id')[col].shift(lag)
             df[lag_feature_name].fillna(0, inplace=True)
 
-def create_windows_features(df:pd.DataFrame, columns, windows: list[int]):
+def create_windows_features(df:pd.DataFrame, columns, windows: list):
     for col in columns:
         for window in windows:
             new_columns = [f'{col}_window_{window}_mean', f'{col}_window_{window}_trend', 
