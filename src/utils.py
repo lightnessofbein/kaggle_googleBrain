@@ -1,12 +1,34 @@
 import pandas as pd
 import numpy as np
 
+
+def trendline(data:pd.Series, order=1):
+    coeffs = np.polyfit(data.index.values, list(data.values), order)
+    slope = coeffs[-2]
+    return float(slope)
+
+
 def create_lag_features(df:pd.DataFrame, columns, lags_start: int, lags_end: int):
     for col in columns:
         for lag in range(lags_start, lags_end + 1):
             lag_feature_name = col + f'_lag{lag}'
             df[lag_feature_name] = df.groupby('breath_id')[col].shift(lag)
             df[lag_feature_name].fillna(0, inplace=True)
+
+def create_windows_features(df:pd.DataFrame, columns, windows: list[int]):
+    for col in columns:
+        for window in windows:
+            new_columns = [f'{col}_window_{window}_mean', f'{col}_window_{window}_trend', 
+            f'{col}_window_{window}_sum', f'{col}_window_{window}_min', f'{col}_window_{window}_max']
+            df[new_columns] = (df.groupby('breath_id')[col].rolling(window=window,min_periods=windows[0])
+                                                              .agg({f'{col}_window_{window}_mean':"mean",
+                                                                    f'{col}_window_{window}_trend':trendline,
+                                                                    f'{col}_window_{window}_sum':"sum",
+                                                                    f'{col}_window_{window}_min':"min",
+                                                                    f'{col}_window_{window}_max':"max",
+                                                                    f'{col}_window_{window}_cumsum': "cumsum"})
+                                                               .reset_index(level=0,drop=True))
+
 
 
 def add_features(df):
@@ -56,14 +78,7 @@ def add_features(df):
                            .ewm(halflife=9)\
                            .mean()\
                            .reset_index(level=0,drop=True))
-    df[["15_in_sum","15_in_min","15_in_max","15_in_mean"]] = (df\
-                                                              .groupby('breath_id')['u_in']\
-                                                              .rolling(window=15,min_periods=1)\
-                                                              .agg({"15_in_sum":"sum",
-                                                                    "15_in_min":"min",
-                                                                    "15_in_max":"max",
-                                                                    "15_in_mean":"mean"})\
-                                                               .reset_index(level=0,drop=True))
+    create_windows_features(df, ['u_in', 'u_out'], [5, 10, 20, 40])
     print("Step-6...Completed")
     
     df['u_in_lagback_diff1'] = df['u_in'] - df['u_in_lag-1']
